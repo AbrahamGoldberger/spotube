@@ -5,6 +5,9 @@ import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' as material;
 import 'package:flutter/services.dart';
+import 'dart:io' as io
+    if (dart.library.html) 'package:spotube/stubs/dart_io_stub.dart' as io;
+
 import 'package:flutter_discord_rpc/flutter_discord_rpc.dart'
     if (dart.library.html) 'package:spotube/stubs/flutter_discord_rpc_stub.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -19,7 +22,8 @@ import 'package:metadata_god/metadata_god.dart'
 import 'package:smtc_windows/smtc_windows.dart'
     if (dart.library.html) 'package:spotube/stubs/smtc_windows_stub.dart';
 import 'package:spotube/collections/env.dart';
-import 'package:spotube/collections/http-override.dart';
+import 'package:spotube/collections/http-override.dart'
+    if (dart.library.html) 'package:spotube/collections/http-override_stub.dart';
 import 'package:spotube/collections/intents.dart';
 import 'package:spotube/collections/routes.dart';
 import 'package:spotube/hooks/configurators/use_close_behavior.dart';
@@ -70,7 +74,9 @@ Future<void> main(List<String> rawArgs) async {
   AppLogger.runZoned(() async {
     final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
 
-    HttpOverrides.global = BadCertificateAllowlistOverrides();
+    if (!kIsWeb) {
+      io.HttpOverrides.global = BadCertificateAllowlistOverrides();
+    }
 
     // await registerWindowsScheme("spotify");
 

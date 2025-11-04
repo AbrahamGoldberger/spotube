@@ -2,6 +2,9 @@ library metadata_objects;
 
 import 'dart:typed_data';
 
+import 'dart:io' as io
+    if (dart.library.html) 'package:spotube/stubs/file_stub.dart' as io;
+
 import 'package:collection/collection.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:metadata_god/metadata_god.dart'

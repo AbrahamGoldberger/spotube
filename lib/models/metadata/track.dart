@@ -24,7 +24,7 @@ class SpotubeTrackObject with _$SpotubeTrackObject {
   }) = SpotubeFullTrackObject;
 
   factory SpotubeTrackObject.localTrackFromFile(
-    File file, {
+    io.File file, {
     Metadata? metadata,
     String? art,
   }) {

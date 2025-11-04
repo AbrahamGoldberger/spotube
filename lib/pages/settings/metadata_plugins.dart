@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:collection/collection.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/material.dart' as material show Theme;
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
@@ -335,14 +336,14 @@ class _MetadataPluginsDisabledView extends StatelessWidget {
                     const SizedBox(height: 16),
                     Text(
                       'Metadata plugins are disabled in this build.',
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: material.Theme.of(context).textTheme.titleMedium,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 12),
                     Text(
                       'This version of Spotube ships with a built-in metadata '
                       'source and does not allow installing third-party plugins.',
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      style: material.Theme.of(context).textTheme.bodyMedium,
                       textAlign: TextAlign.center,
                     ),
                   ],

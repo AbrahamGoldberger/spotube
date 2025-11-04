@@ -15,11 +15,17 @@ class DownloadManagerProvider extends ChangeNotifier {
 
   String get downloadDirectory => '';
 
-  SourceCodecs get downloadCodec => SourceCodecs.opus;
+  SourceCodecs get downloadCodec => SourceCodecs.m4a;
+
+  int get $downloadCount => 0;
+
+  final Set<SpotubeFullTrackObject> $backHistory = {};
 
   bool isActive(SpotubeFullTrackObject track) => false;
 
   Future<void> addToQueue(SpotubeFullTrackObject track) async {}
+
+  Future<void> batchAddToQueue(List<SpotubeFullTrackObject> tracks) async {}
 
   Future<void> removeFromQueue(SpotubeFullTrackObject track) async {}
 

@@ -33,8 +33,8 @@ class Env {
   static const String discordAppId = '1176718791388975124';
 
   static String _stringFromEnvironment(String name, {String fallback = ''}) {
-    final value = const String.fromEnvironment(name, defaultValue: fallback);
-    return value.isNotEmpty ? value : fallback;
+    const valueFromEnv = String.fromEnvironment(name);
+    return valueFromEnv.isNotEmpty ? valueFromEnv : fallback;
   }
 
   static bool _boolishFromEnvironment({
