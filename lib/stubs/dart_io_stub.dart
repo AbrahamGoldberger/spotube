@@ -1,3 +1,3 @@
 class HttpOverrides {
-  static Object? global;
+  static HttpOverrides? global;
 }

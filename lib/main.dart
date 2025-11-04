@@ -5,8 +5,8 @@ import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' as material;
 import 'package:flutter/services.dart';
-import 'dart:io' as io
-    if (dart.library.html) 'package:spotube/stubs/dart_io_stub.dart';
+import 'dart:io'
+    if (dart.library.html) 'package:spotube/stubs/dart_io_stub.dart' as io;
 
 import 'package:flutter_discord_rpc/flutter_discord_rpc.dart'
     if (dart.library.html) 'package:spotube/stubs/flutter_discord_rpc_stub.dart';
