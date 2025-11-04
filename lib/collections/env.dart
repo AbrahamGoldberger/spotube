@@ -9,43 +9,47 @@ enum ReleaseChannel {
 class Env {
   Env._();
 
-  static final String lastFmApiKey =
-      _stringFromEnvironment('LASTFM_API_KEY');
+  static const _lastFmApiKey = String.fromEnvironment('LASTFM_API_KEY');
+  static const _lastFmApiSecret = String.fromEnvironment('LASTFM_API_SECRET');
+  static const _hideDonationsRaw = String.fromEnvironment('HIDE_DONATIONS');
+  static const _releaseChannelRaw = String.fromEnvironment('RELEASE_CHANNEL');
+  static const _enableUpdateCheckRaw =
+      String.fromEnvironment('ENABLE_UPDATE_CHECK');
 
-  static final String lastFmApiSecret =
-      _stringFromEnvironment('LASTFM_API_SECRET');
+  static String get lastFmApiKey => _stringWithFallback(_lastFmApiKey, '');
 
-  static final bool hideDonations = _boolishFromEnvironment(
-    name: 'HIDE_DONATIONS',
-    defaultValue: false,
-  );
+  static String get lastFmApiSecret =>
+      _stringWithFallback(_lastFmApiSecret, '');
 
-  static final ReleaseChannel releaseChannel = _releaseChannelFromString(
-    _stringFromEnvironment('RELEASE_CHANNEL', fallback: 'nightly'),
-  );
+  static bool get hideDonations => _boolishFromEnvironment(
+        rawValue: _hideDonationsRaw,
+        defaultValue: false,
+      );
 
-  static final bool enableUpdateChecker = kIsFlatpak ||
+  static ReleaseChannel get releaseChannel => _releaseChannelFromString(
+        _stringWithFallback(_releaseChannelRaw, 'nightly'),
+      );
+
+  static bool get enableUpdateChecker => kIsFlatpak ||
       _boolishFromEnvironment(
-        name: 'ENABLE_UPDATE_CHECK',
+        rawValue: _enableUpdateCheckRaw,
         defaultValue: true,
       );
 
   static const String discordAppId = '1176718791388975124';
 
-  static String _stringFromEnvironment(String name, {String fallback = ''}) {
-    const valueFromEnv = String.fromEnvironment(name);
-    return valueFromEnv.isNotEmpty ? valueFromEnv : fallback;
+  static String _stringWithFallback(String raw, String fallback) {
+    return raw.isNotEmpty ? raw : fallback;
   }
 
   static bool _boolishFromEnvironment({
-    required String name,
+    required String rawValue,
     required bool defaultValue,
   }) {
-    final raw = _stringFromEnvironment(
-      name,
-      fallback: defaultValue ? '1' : '0',
-    ).toLowerCase();
-    return raw == '1' || raw == 'true';
+    final normalized = rawValue.isEmpty
+        ? (defaultValue ? '1' : '0')
+        : rawValue.toLowerCase();
+    return normalized == '1' || normalized == 'true';
   }
 
   static ReleaseChannel _releaseChannelFromString(String raw) {
