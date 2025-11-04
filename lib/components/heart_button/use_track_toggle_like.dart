@@ -1,4 +1,5 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:spotube/config/app_config.dart';
 import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/provider/metadata_plugin/library/tracks.dart';
 
@@ -9,6 +10,13 @@ typedef UseTrackToggleLike = ({
 });
 
 UseTrackToggleLike useTrackToggleLike(SpotubeTrackObject track, WidgetRef ref) {
+  if (!metadataPluginsEnabled) {
+    return (
+      isLiked: false,
+      isLoading: false,
+      toggleTrackLike: (_) async {},
+    );
+  }
   final savedTracksNotifier =
       ref.watch(metadataPluginSavedTracksProvider.notifier);
 

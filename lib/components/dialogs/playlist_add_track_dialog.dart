@@ -1,6 +1,7 @@
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
+import 'package:spotube/config/app_config.dart';
 import 'package:spotube/models/metadata/metadata.dart';
 
 import 'package:spotube/modules/playlist/playlist_create_dialog.dart';
@@ -21,6 +22,9 @@ class PlaylistAddTrackDialog extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
+    if (!metadataPluginsEnabled) {
+      return const SizedBox.shrink();
+    }
     final typography = Theme.of(context).typography;
     final userPlaylists = ref.watch(metadataPluginSavedPlaylistsProvider);
     final favoritePlaylistsNotifier =

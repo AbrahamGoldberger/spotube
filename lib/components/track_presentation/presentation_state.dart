@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:fuzzywuzzy/fuzzywuzzy.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:spotube/config/app_config.dart';
 import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/pages/library/user_local_tracks/user_local_tracks.dart';
 import 'package:spotube/provider/metadata_plugin/library/tracks.dart';
@@ -36,6 +37,13 @@ class PresentationStateNotifier
     extends AutoDisposeFamilyNotifier<PresentationState, Object> {
   @override
   PresentationState build(collection) {
+    if (!metadataPluginsEnabled) {
+      return const PresentationState(
+        selectedTracks: [],
+        presentationTracks: [],
+        sortBy: SortBy.none,
+      );
+    }
     if (arg case SpotubeSimplePlaylistObject() || SpotubeSimpleAlbumObject()) {
       if (isSavedTrackPlaylist) {
         ref.listen(
@@ -84,6 +92,9 @@ class PresentationStateNotifier
       (arg as SpotubeSimplePlaylistObject).id == "user-liked-tracks";
 
   List<SpotubeTrackObject> get tracks {
+    if (!metadataPluginsEnabled) {
+      return const <SpotubeTrackObject>[];
+    }
     assert(
       arg is SpotubeSimplePlaylistObject || arg is SpotubeSimpleAlbumObject,
       "arg must be SpotubeSimplePlaylistObject or SpotubeSimpleAlbumObject",

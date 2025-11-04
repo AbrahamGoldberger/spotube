@@ -6,6 +6,7 @@ import 'package:spotube/collections/routes.gr.dart';
 import 'package:spotube/components/dialogs/select_device_dialog.dart';
 import 'package:spotube/components/playbutton_view/playbutton_card.dart';
 import 'package:spotube/components/playbutton_view/playbutton_tile.dart';
+import 'package:spotube/config/app_config.dart';
 import 'package:spotube/extensions/context.dart';
 import 'package:spotube/models/connect/connect.dart';
 import 'package:spotube/models/metadata/metadata.dart';
@@ -34,6 +35,9 @@ class PlaylistCard extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
+    if (!metadataPluginsEnabled) {
+      return const SizedBox.shrink();
+    }
     final playlistQueue = ref.watch(audioPlayerProvider);
     final playlistNotifier = ref.watch(audioPlayerProvider.notifier);
     final isFetchingActiveTrack = ref.watch(queryingTrackInfoProvider);

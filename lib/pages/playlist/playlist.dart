@@ -6,6 +6,7 @@ import 'package:spotube/components/dialogs/prompt_dialog.dart';
 import 'package:spotube/components/track_presentation/presentation_props.dart';
 import 'package:spotube/components/track_presentation/track_presentation.dart';
 import 'package:spotube/components/track_presentation/use_is_user_playlist.dart';
+import 'package:spotube/config/app_config.dart';
 import 'package:spotube/extensions/context.dart';
 import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/provider/metadata_plugin/library/playlists.dart';
@@ -27,6 +28,9 @@ class PlaylistPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
+    if (!metadataPluginsEnabled) {
+      return const SizedBox.shrink();
+    }
     final playlist = ref
             .watch(
               metadataPluginSavedPlaylistsProvider.select(

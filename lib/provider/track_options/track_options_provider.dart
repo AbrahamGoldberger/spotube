@@ -79,6 +79,9 @@ class TrackOptionsActions {
     BuildContext context,
     String? playlistId,
   ) async {
+    if (!metadataPluginsEnabled) {
+      return;
+    }
     /// showDialog doesn't work for some reason. So we have to
     /// manually push a Dialog Route in the Navigator to get it working
     await showDialog(
@@ -93,6 +96,9 @@ class TrackOptionsActions {
   }
 
   Future<void> actionStartRadio(BuildContext context) async {
+    if (!metadataPluginsEnabled) {
+      return;
+    }
     final playback = ref.read(audioPlayerProvider.notifier);
     final playlist = ref.read(audioPlayerProvider);
     final metadataPlugin = await ref.read(metadataPluginProvider.future);
@@ -208,6 +214,9 @@ class TrackOptionsActions {
         }
         break;
       case TrackOptionValue.favorite:
+        if (!metadataPluginsEnabled) {
+          break;
+        }
         final isLikedTrack = await ref.read(
           metadataPluginIsSavedTrackProvider(track.id).future,
         );
@@ -219,9 +228,15 @@ class TrackOptionsActions {
         }
         break;
       case TrackOptionValue.addToPlaylist:
+        if (!metadataPluginsEnabled) {
+          break;
+        }
         actionAddToPlaylist(context, playlistId);
         break;
       case TrackOptionValue.removeFromPlaylist:
+        if (!metadataPluginsEnabled) {
+          break;
+        }
         favoritePlaylistsNotifier.removeTracks(playlistId ?? "", [track.id]);
         break;
       case TrackOptionValue.blacklist:
@@ -287,11 +302,16 @@ final trackOptionsStateProvider =
   ref.watch(blacklistProvider);
 
   final playlist = ref.watch(audioPlayerProvider);
-  final authenticated = ref.watch(metadataPluginAuthenticatedProvider);
   final downloadManager = ref.watch(downloadManagerProvider.notifier);
   final blacklist = ref.watch(blacklistProvider.notifier);
   final isBlacklisted = blacklist.contains(track);
-  final isSavedTrack = ref.watch(metadataPluginIsSavedTrackProvider(track.id));
+
+  final authenticated = metadataPluginsEnabled
+      ? ref.watch(metadataPluginAuthenticatedProvider)
+      : const AsyncData(false);
+  final isSavedTrack = metadataPluginsEnabled
+      ? ref.watch(metadataPluginIsSavedTrackProvider(track.id))
+      : const AsyncData(false);
 
   final isInDownloadQueue = playlist.activeTrack == null ||
           playlist.activeTrack! is SpotubeLocalTrackObject

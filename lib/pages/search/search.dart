@@ -10,6 +10,7 @@ import 'package:spotube/collections/spotube_icons.dart';
 import 'package:spotube/components/fallbacks/error_box.dart';
 import 'package:spotube/components/fallbacks/no_default_metadata_plugin.dart';
 import 'package:spotube/components/titlebar/titlebar.dart';
+import 'package:spotube/config/app_config.dart';
 import 'package:spotube/extensions/context.dart';
 import 'package:spotube/extensions/string.dart';
 import 'package:spotube/hooks/controllers/use_shadcn_text_editing_controller.dart';
@@ -35,6 +36,9 @@ class SearchPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
+    if (!metadataPluginsEnabled) {
+      return const NoDefaultMetadataPlugin();
+    }
     final controller = useShadcnTextEditingController();
     final focusNode = useFocusNode();
 

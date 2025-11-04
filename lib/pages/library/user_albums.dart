@@ -12,6 +12,7 @@ import 'package:spotube/collections/spotube_icons.dart';
 import 'package:spotube/components/fallbacks/error_box.dart';
 import 'package:spotube/components/fallbacks/no_default_metadata_plugin.dart';
 import 'package:spotube/components/playbutton_view/playbutton_view.dart';
+import 'package:spotube/config/app_config.dart';
 import 'package:spotube/modules/album/album_card.dart';
 import 'package:spotube/components/inter_scrollbar/inter_scrollbar.dart';
 import 'package:spotube/components/fallbacks/anonymous_fallback.dart';
@@ -28,6 +29,9 @@ class UserAlbumsPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
+    if (!metadataPluginsEnabled) {
+      return const Center(child: NoDefaultMetadataPlugin());
+    }
     final authenticated = ref.watch(metadataPluginAuthenticatedProvider);
     final albumsQuery = ref.watch(metadataPluginSavedAlbumsProvider);
     final albumsQueryNotifier =
