@@ -1,38 +1,59 @@
-import 'package:envied/envied.dart';
+import 'package:flutter/foundation.dart';
 import 'package:spotube/utils/platform.dart';
-
-part 'env.g.dart';
 
 enum ReleaseChannel {
   nightly,
   stable,
 }
 
-@Envied(obfuscate: true, requireEnvFile: true, path: ".env")
-abstract class Env {
-  @EnviedField(varName: 'LASTFM_API_KEY')
-  static final String lastFmApiKey = _Env.lastFmApiKey;
+class Env {
+  Env._();
 
-  @EnviedField(varName: 'LASTFM_API_SECRET')
-  static final String lastFmApiSecret = _Env.lastFmApiSecret;
+  static final String lastFmApiKey =
+      _stringFromEnvironment('LASTFM_API_KEY');
 
-  @EnviedField(varName: 'HIDE_DONATIONS', defaultValue: "0")
-  static final int _hideDonations = _Env._hideDonations;
+  static final String lastFmApiSecret =
+      _stringFromEnvironment('LASTFM_API_SECRET');
 
-  static bool get hideDonations => _hideDonations == 1;
+  static final bool hideDonations = _boolishFromEnvironment(
+    name: 'HIDE_DONATIONS',
+    defaultValue: false,
+  );
 
-  @EnviedField(varName: 'ENABLE_UPDATE_CHECK', defaultValue: "1")
-  static final String _enableUpdateChecker = _Env._enableUpdateChecker;
+  static final ReleaseChannel releaseChannel = _releaseChannelFromString(
+    _stringFromEnvironment('RELEASE_CHANNEL', fallback: 'nightly'),
+  );
 
-  @EnviedField(varName: "RELEASE_CHANNEL", defaultValue: "nightly")
-  static final String _releaseChannel = _Env._releaseChannel;
+  static final bool enableUpdateChecker = kIsFlatpak ||
+      _boolishFromEnvironment(
+        name: 'ENABLE_UPDATE_CHECK',
+        defaultValue: true,
+      );
 
-  static ReleaseChannel get releaseChannel => _releaseChannel == "stable"
-      ? ReleaseChannel.stable
-      : ReleaseChannel.nightly;
+  static const String discordAppId = '1176718791388975124';
 
-  static bool get enableUpdateChecker =>
-      kIsFlatpak || _enableUpdateChecker == "1";
+  static String _stringFromEnvironment(String name, {String fallback = ''}) {
+    final value = const String.fromEnvironment(name, defaultValue: fallback);
+    return value.isNotEmpty ? value : fallback;
+  }
 
-  static String discordAppId = "1176718791388975124";
+  static bool _boolishFromEnvironment({
+    required String name,
+    required bool defaultValue,
+  }) {
+    final raw = _stringFromEnvironment(
+      name,
+      fallback: defaultValue ? '1' : '0',
+    ).toLowerCase();
+    return raw == '1' || raw == 'true';
+  }
+
+  static ReleaseChannel _releaseChannelFromString(String raw) {
+    switch (raw.toLowerCase()) {
+      case 'stable':
+        return ReleaseChannel.stable;
+      default:
+        return ReleaseChannel.nightly;
+    }
+  }
 }

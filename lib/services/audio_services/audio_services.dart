@@ -6,7 +6,9 @@ import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/provider/audio_player/audio_player.dart';
 import 'package:spotube/services/audio_player/audio_player.dart';
 import 'package:spotube/services/audio_services/mobile_audio_service.dart';
-import 'package:spotube/services/audio_services/windows_audio_service.dart';
+import 'package:spotube/services/audio_services/windows_audio_service.dart'
+    if (dart.library.html)
+        'package:spotube/services/audio_services/windows_audio_service_stub.dart';
 import 'package:spotube/utils/platform.dart';
 
 class AudioServices with WidgetsBindingObserver {
