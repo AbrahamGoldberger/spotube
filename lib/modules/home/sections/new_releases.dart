@@ -26,12 +26,11 @@ class HomeNewReleasesSection extends HookConsumerWidget {
       return const SizedBox.shrink();
     }
 
-    if (newReleases.error
-        case MetadataPluginException(
-          errorCode: MetadataPluginErrorCode.noDefaultPlugin,
-          message: _,
-        )) {
-      return const SizedBox.shrink();
+    if (newReleases.error case MetadataPluginException(:final errorCode)) {
+      if (errorCode == MetadataPluginErrorCode.noDefaultPlugin ||
+          errorCode == MetadataPluginErrorCode.pluginsDisabled) {
+        return const SizedBox.shrink();
+      }
     }
 
     return HorizontalPlaybuttonCardView<SpotubeSimpleAlbumObject>(

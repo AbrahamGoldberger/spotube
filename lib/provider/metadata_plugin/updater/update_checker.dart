@@ -1,9 +1,13 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:spotube/config/app_config.dart';
 import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/provider/metadata_plugin/metadata_plugin_provider.dart';
 
 final metadataPluginUpdateCheckerProvider =
     FutureProvider<PluginUpdateAvailable?>((ref) async {
+  if (!metadataPluginsEnabled) {
+    return null;
+  }
   final metadataPluginConfigs = await ref.watch(metadataPluginsProvider.future);
   final metadataPlugin = await ref.watch(metadataPluginProvider.future);
 

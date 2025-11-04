@@ -53,12 +53,11 @@ class UserAlbumsPage extends HookConsumerWidget {
           [];
     }, [albumsQuery.asData?.value, searchText.value]);
 
-    if (albumsQuery.error
-        case MetadataPluginException(
-          errorCode: MetadataPluginErrorCode.noDefaultPlugin,
-          message: _,
-        )) {
-      return const Center(child: NoDefaultMetadataPlugin());
+    if (albumsQuery.error case MetadataPluginException(:final errorCode)) {
+      if (errorCode == MetadataPluginErrorCode.noDefaultPlugin ||
+          errorCode == MetadataPluginErrorCode.pluginsDisabled) {
+        return const Center(child: NoDefaultMetadataPlugin());
+      }
     }
 
     if (authenticated.asData?.value != true) {

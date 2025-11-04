@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:spotube/config/app_config.dart';
 import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/provider/metadata_plugin/metadata_plugin_provider.dart';
 import 'package:spotube/provider/metadata_plugin/utils/common.dart';
@@ -12,6 +13,9 @@ final metadataPluginArtistProvider =
     final metadataPlugin = await ref.watch(metadataPluginProvider.future);
 
     if (metadataPlugin == null) {
+      if (!metadataPluginsEnabled) {
+        throw MetadataPluginException.pluginsDisabled();
+      }
       throw MetadataPluginException.noDefaultPlugin();
     }
 

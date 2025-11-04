@@ -58,12 +58,11 @@ class UserArtistsPage extends HookConsumerWidget {
 
     final controller = useScrollController();
 
-    if (artistQuery.error
-        case MetadataPluginException(
-          errorCode: MetadataPluginErrorCode.noDefaultPlugin,
-          message: _,
-        )) {
-      return const Center(child: NoDefaultMetadataPlugin());
+    if (artistQuery.error case MetadataPluginException(:final errorCode)) {
+      if (errorCode == MetadataPluginErrorCode.noDefaultPlugin ||
+          errorCode == MetadataPluginErrorCode.pluginsDisabled) {
+        return const Center(child: NoDefaultMetadataPlugin());
+      }
     }
 
     if (authenticated.asData?.value != true) {

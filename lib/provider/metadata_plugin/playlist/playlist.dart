@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:spotube/config/app_config.dart';
 import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/provider/metadata_plugin/library/playlists.dart';
 import 'package:spotube/provider/metadata_plugin/metadata_plugin_provider.dart';
@@ -13,6 +14,9 @@ class MetadataPluginPlaylistNotifier
     final metadataPlugin = await ref.read(metadataPluginProvider.future);
 
     if (metadataPlugin == null) {
+      if (!metadataPluginsEnabled) {
+        throw MetadataPluginException.pluginsDisabled();
+      }
       throw MetadataPluginException.noDefaultPlugin();
     }
 

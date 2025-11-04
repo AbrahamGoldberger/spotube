@@ -81,12 +81,11 @@ class UserPlaylistsPage extends HookConsumerWidget {
 
     final controller = useScrollController();
 
-    if (playlistsQuery.error
-        case MetadataPluginException(
-          errorCode: MetadataPluginErrorCode.noDefaultPlugin,
-          message: _,
-        )) {
-      return const Center(child: NoDefaultMetadataPlugin());
+    if (playlistsQuery.error case MetadataPluginException(:final errorCode)) {
+      if (errorCode == MetadataPluginErrorCode.noDefaultPlugin ||
+          errorCode == MetadataPluginErrorCode.pluginsDisabled) {
+        return const Center(child: NoDefaultMetadataPlugin());
+      }
     }
 
     if (authenticated.asData?.value != true) {

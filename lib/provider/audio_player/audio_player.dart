@@ -8,6 +8,7 @@ import 'package:spotube/extensions/list.dart';
 import 'package:spotube/models/database/database.dart';
 import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/models/playback/track_sources.dart';
+import 'package:spotube/provider/allowlist_provider.dart';
 import 'package:spotube/provider/audio_player/state.dart';
 import 'package:spotube/provider/blacklist_provider.dart';
 import 'package:spotube/provider/database/database.dart';
@@ -18,6 +19,7 @@ import 'package:spotube/services/logger/logger.dart';
 
 class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   BlackListNotifier get _blacklist => ref.read(blacklistProvider.notifier);
+  AllowList get _allowList => ref.read(allowListProvider);
 
   void _assertAllowedTracks(Iterable<SpotubeTrackObject> tracks) {
     assert(
@@ -103,6 +105,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
   @override
   build() {
+    ref.watch(allowListProvider);
     final subscriptions = [
       audioPlayer.playingStream.listen((playing) async {
         try {
@@ -259,7 +262,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       return addTracks(tracks);
     }
 
-    final addableTracks = _blacklist.filter(tracks).where(
+    final addableTracks = _allowList
+        .filter(_blacklist.filter(tracks))
+        .where(
           (track) =>
               allowDuplicates ||
               !state.tracks.any((element) => _compareTracks(element, track)),
@@ -289,7 +294,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   Future<void> addTrack(SpotubeTrackObject track) async {
     _assertAllowedTrack(track);
 
-    if (_blacklist.contains(track)) return;
+    if (_blacklist.contains(track) || !_allowList.allows(track)) return;
     if (state.tracks.any((element) => _compareTracks(element, track))) return;
 
     state = state.copyWith(
@@ -309,7 +314,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   Future<void> addTracks(Iterable<SpotubeTrackObject> tracks) async {
     _assertAllowedTracks(tracks);
 
-    tracks = _blacklist.filter(tracks).toList();
+    tracks = _allowList.filter(_blacklist.filter(tracks)).toList();
     state = state.copyWith(
       tracks: [...state.tracks, ...tracks],
     );
@@ -388,8 +393,8 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   }) async {
     _assertAllowedTracks(tracks);
 
-    final medias = _blacklist
-        .filter(tracks)
+    final medias = _allowList
+        .filter(_blacklist.filter(tracks))
         .toList()
         .asMediaList()
         .unique((a, b) => a.uri == b.uri);

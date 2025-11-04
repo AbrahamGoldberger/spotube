@@ -46,14 +46,13 @@ class HomePageBrowseSection extends HookConsumerWidget {
       );
     }
 
-    if (browseSections.error
-        case MetadataPluginException(
-          errorCode: MetadataPluginErrorCode.noDefaultPlugin,
-          message: _,
-        )) {
-      return const SliverFillRemaining(
-        child: Center(child: NoDefaultMetadataPlugin()),
-      );
+    if (browseSections.error case MetadataPluginException(:final errorCode)) {
+      if (errorCode == MetadataPluginErrorCode.noDefaultPlugin ||
+          errorCode == MetadataPluginErrorCode.pluginsDisabled) {
+        return const SliverFillRemaining(
+          child: Center(child: NoDefaultMetadataPlugin()),
+        );
+      }
     }
 
     if (browseSections.hasError) {

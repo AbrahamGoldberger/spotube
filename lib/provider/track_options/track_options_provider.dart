@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:spotube/collections/routes.dart';
+import 'package:spotube/config/app_config.dart';
 import 'package:spotube/collections/routes.gr.dart';
 import 'package:spotube/components/dialogs/playlist_add_track_dialog.dart';
 import 'package:spotube/components/dialogs/prompt_dialog.dart';
@@ -97,6 +98,9 @@ class TrackOptionsActions {
     final metadataPlugin = await ref.read(metadataPluginProvider.future);
 
     if (metadataPlugin == null) {
+      if (!metadataPluginsEnabled) {
+        throw MetadataPluginException.pluginsDisabled();
+      }
       throw MetadataPluginException.noDefaultPlugin();
     }
 

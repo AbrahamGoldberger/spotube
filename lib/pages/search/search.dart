@@ -84,11 +84,11 @@ class SearchPage extends HookConsumerWidget {
           ],
           child: Builder(builder: (context) {
             if (searchChipSnapshot.error
-                case MetadataPluginException(
-                  errorCode: MetadataPluginErrorCode.noDefaultPlugin,
-                  message: _
-                )) {
-              return const NoDefaultMetadataPlugin();
+                case MetadataPluginException(:final errorCode)) {
+              if (errorCode == MetadataPluginErrorCode.noDefaultPlugin ||
+                  errorCode == MetadataPluginErrorCode.pluginsDisabled) {
+                return const NoDefaultMetadataPlugin();
+              }
             }
 
             if (searchChipSnapshot.hasError) {
