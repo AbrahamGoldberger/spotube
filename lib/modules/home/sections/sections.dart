@@ -161,7 +161,9 @@ class _CuratedHomeCatalog extends HookConsumerWidget {
                     ),
                     Text(
                       context.l10n.top_tracks,
-                      style: theme.typography.muted,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.mutedForeground,
+                      ),
                     ),
                     ...List.generate(curatedArtist.tracks.length, (trackIndex) {
                       final track = curatedArtist.tracks[trackIndex];
