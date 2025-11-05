@@ -15,13 +15,17 @@ import 'package:spotube/components/fallbacks/anonymous_fallback.dart';
 import 'package:spotube/components/fallbacks/error_box.dart';
 import 'package:spotube/components/fallbacks/no_default_metadata_plugin.dart';
 import 'package:spotube/config/app_config.dart';
-import 'package:spotube/modules/artist/artist_card.dart';
 import 'package:spotube/components/inter_scrollbar/inter_scrollbar.dart';
+import 'package:spotube/components/track_tile/track_tile.dart';
 import 'package:spotube/components/waypoint.dart';
 import 'package:spotube/extensions/constrains.dart';
 import 'package:spotube/extensions/context.dart';
+import 'package:spotube/hooks/controllers/use_shadcn_text_editing_controller.dart';
+import 'package:spotube/modules/artist/artist_card.dart';
 import 'package:spotube/provider/metadata_plugin/core/auth.dart';
 import 'package:spotube/provider/metadata_plugin/library/artists.dart';
+import 'package:spotube/provider/audio_player/audio_player.dart';
+import 'package:spotube/provider/curated_catalog_provider.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:spotube/services/metadata/errors/exceptions.dart';
 
@@ -33,7 +37,7 @@ class UserArtistsPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, ref) {
     if (!metadataPluginsEnabled) {
-      return const Center(child: NoDefaultMetadataPlugin());
+      return const _CuratedArtistsLibrary();
     }
     final authenticated = ref.watch(metadataPluginAuthenticatedProvider);
 
@@ -195,6 +199,119 @@ class UserArtistsPage extends HookConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _CuratedArtistsLibrary extends HookConsumerWidget {
+  const _CuratedArtistsLibrary();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final catalogAsync = ref.watch(curatedCatalogProvider);
+    final playlist = ref.watch(audioPlayerProvider);
+    final player = ref.read(audioPlayerProvider.notifier);
+    final controller = useShadcnTextEditingController();
+    final searchTerm = useState('');
+
+    useEffect(() {
+      controller.text = searchTerm.value;
+      return null;
+    }, [searchTerm.value]);
+
+    return catalogAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stackTrace) => Center(
+        child: ErrorBox(
+          error: error,
+          onRetry: () => ref.invalidate(curatedCatalogProvider),
+        ),
+      ),
+      data: (catalog) {
+        final query = searchTerm.value.trim().toLowerCase();
+        final artists = query.isEmpty
+            ? catalog.artists
+            : catalog.artists
+                .where(
+                  (artist) => artist.artist.name
+                      .toLowerCase()
+                      .contains(query),
+                )
+                .toList();
+
+        return SafeArea(
+          bottom: false,
+          child: Scaffold(
+            child: CustomScrollView(
+              slivers: [
+                SliverAppBar(
+                  automaticallyImplyLeading: false,
+                  backgroundColor: Theme.of(context).colorScheme.background,
+                  floating: true,
+                  flexibleSpace: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: TextField(
+                      controller: controller,
+                      placeholder: Text(context.l10n.filter_artist),
+                      onChanged: (value) => searchTerm.value = value,
+                      features: const [
+                        InputFeature.leading(Icon(SpotubeIcons.search)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SliverGap(12),
+                if (artists.isEmpty)
+                  SliverFillRemaining(
+                    child: Center(
+                      child: Text(context.l10n.nothing_found).muted(),
+                    ),
+                  )
+                else
+                  SliverList.builder(
+                    itemCount: artists.length,
+                    itemBuilder: (context, index) {
+                      final curated = artists[index];
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        child: Card(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            spacing: 12,
+                            children: [
+                              Text(
+                                curated.artist.name,
+                                style: Theme.of(context).typography.h4,
+                              ),
+                              ...List.generate(curated.tracks.length, (trackIndex) {
+                                final track = curated.tracks[trackIndex];
+                                return TrackTile(
+                                  index: trackIndex,
+                                  playlist: playlist,
+                                  track: track,
+                                  onTap: () => player.load(
+                                    curated.tracks,
+                                    initialIndex: trackIndex,
+                                    autoPlay: true,
+                                  ),
+                                );
+                              }),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                const SliverSafeArea(sliver: SliverGap(16)),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

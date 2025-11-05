@@ -8,6 +8,9 @@ import 'package:spotube/components/fallbacks/no_default_metadata_plugin.dart';
 import 'package:spotube/components/horizontal_playbutton_card_view/horizontal_playbutton_card_view.dart';
 import 'package:spotube/config/app_config.dart';
 import 'package:spotube/extensions/context.dart';
+import 'package:spotube/components/track_tile/track_tile.dart';
+import 'package:spotube/provider/audio_player/audio_player.dart';
+import 'package:spotube/provider/curated_catalog_provider.dart';
 import 'package:spotube/provider/metadata_plugin/browse/sections.dart';
 import 'package:spotube/provider/metadata_plugin/utils/common.dart';
 import 'package:spotube/services/metadata/errors/exceptions.dart';
@@ -19,9 +22,7 @@ class HomePageBrowseSection extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, ref) {
     if (!metadataPluginsEnabled) {
-      return const SliverFillRemaining(
-        child: Center(child: NoDefaultMetadataPlugin()),
-      );
+      return const _CuratedHomeCatalog();
     }
     final browseSections = ref.watch(metadataPluginBrowseSectionsProvider);
     final sections = browseSections.asData?.value.items;
@@ -104,6 +105,82 @@ class HomePageBrowseSection extends HookConsumerWidget {
                   },
                 )
               : null,
+        );
+      },
+    );
+  }
+}
+
+class _CuratedHomeCatalog extends HookConsumerWidget {
+  const _CuratedHomeCatalog();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final catalogAsync = ref.watch(curatedCatalogProvider);
+    final playlist = ref.watch(audioPlayerProvider);
+    final player = ref.read(audioPlayerProvider.notifier);
+    final theme = Theme.of(context);
+
+    return catalogAsync.when(
+      loading: () => const SliverFillRemaining(
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, stackTrace) => SliverFillRemaining(
+        child: Center(
+          child: ErrorBox(
+            error: error,
+            onRetry: () => ref.invalidate(curatedCatalogProvider),
+          ),
+        ),
+      ),
+      data: (catalog) {
+        if (catalog.artists.isEmpty) {
+          return SliverFillRemaining(
+            child: Center(
+              child: Text(context.l10n.no_tracks).muted(),
+            ),
+          );
+        }
+
+        return SliverList.builder(
+          itemCount: catalog.artists.length,
+          itemBuilder: (context, index) {
+            final curatedArtist = catalog.artists[index];
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Card(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: 12,
+                  children: [
+                    Text(
+                      curatedArtist.artist.name,
+                      style: theme.typography.h4,
+                    ),
+                    Text(
+                      context.l10n.top_tracks,
+                      style: theme.typography.muted,
+                    ),
+                    ...List.generate(curatedArtist.tracks.length, (trackIndex) {
+                      final track = curatedArtist.tracks[trackIndex];
+                      return TrackTile(
+                        index: trackIndex,
+                        playlist: playlist,
+                        track: track,
+                        onTap: () => player.load(
+                          curatedArtist.tracks,
+                          initialIndex: trackIndex,
+                          autoPlay: true,
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            );
+          },
         );
       },
     );
