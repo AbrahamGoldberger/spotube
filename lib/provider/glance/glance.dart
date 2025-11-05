@@ -112,12 +112,16 @@ final glanceProvider = Provider((ref) {
   server.whenData(
     (value) async {
       final (:server, :port) = value;
+      final serverAddress =
+          (server == null) ? null : (server as dynamic).address?.host;
 
-      await _saveWidgetData(
-        "playbackServerAddress",
-        "${server.address.host}:$port",
-      );
-      await _updateWidget();
+      if (serverAddress != null) {
+        await _saveWidgetData(
+          "playbackServerAddress",
+          "$serverAddress:$port",
+        );
+        await _updateWidget();
+      }
     },
   );
 
@@ -127,12 +131,16 @@ final glanceProvider = Provider((ref) {
     next.whenData(
       (value) async {
         final (:server, :port) = value;
+        final serverAddress =
+            (server == null) ? null : (server as dynamic).address?.host;
 
-        await _saveWidgetData(
-          "playbackServerAddress",
-          "${server.address.host}:$port",
-        );
-        await _updateWidget();
+        if (serverAddress != null) {
+          await _saveWidgetData(
+            "playbackServerAddress",
+            "$serverAddress:$port",
+          );
+          await _updateWidget();
+        }
       },
     );
   });

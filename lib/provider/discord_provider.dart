@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter_discord_rpc/flutter_discord_rpc.dart';
+import 'package:flutter_discord_rpc/flutter_discord_rpc.dart'
+    if (dart.library.html) 'package:spotube/stubs/flutter_discord_rpc_stub.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/provider/audio_player/audio_player.dart';

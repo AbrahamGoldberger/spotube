@@ -1,4 +1,6 @@
 import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:spotube/services/logger/logger.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:flutter_broadcasts/flutter_broadcasts.dart';
@@ -21,7 +23,9 @@ class CustomPlayer extends Player {
 
   CustomPlayer({super.configuration})
       : _playerStateStream = StreamController.broadcast() {
-    nativePlayer.setProperty("network-timeout", "120");
+    if (!kIsWeb) {
+      (nativePlayer as dynamic).setProperty("network-timeout", "120");
+    }
 
     _subscriptions = [
       stream.buffering.listen((event) {
@@ -57,11 +61,12 @@ class CustomPlayer extends Player {
             await _androidAudioManager!.generateAudioSessionId();
         notifyAudioSessionUpdate(true);
 
-        await nativePlayer.setProperty(
+        await (nativePlayer as dynamic).setProperty(
           "audiotrack-session-id",
           _androidAudioSessionId.toString(),
         );
-        await nativePlayer.setProperty("ao", "audiotrack,opensles,");
+        await (nativePlayer as dynamic)
+            .setProperty("ao", "audiotrack,opensles,");
       });
     }
   }
@@ -127,10 +132,14 @@ class CustomPlayer extends Player {
   }
 
   Future<void> setAudioNormalization(bool normalize) async {
+    if (kIsWeb) {
+      return;
+    }
     if (normalize) {
-      await nativePlayer.setProperty('af', 'dynaudnorm=g=5:f=250:r=0.9:p=0.5');
+      await (nativePlayer as dynamic)
+          .setProperty('af', 'dynaudnorm=g=5:f=250:r=0.9:p=0.5');
     } else {
-      await nativePlayer.setProperty('af', '');
+      await (nativePlayer as dynamic).setProperty('af', '');
     }
   }
 }

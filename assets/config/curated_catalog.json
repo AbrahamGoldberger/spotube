@@ -1,0 +1,120 @@
+{
+  "artists": [
+    {
+      "id": "rick_astley",
+      "name": "Rick Astley",
+      "externalUri": "https://music.youtube.com/channel/UC38IQsAvIsxxjztdMZQtwHA",
+      "images": [
+        {
+          "url": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+          "width": 480,
+          "height": 360
+        }
+      ],
+      "tracks": [
+        {
+          "id": "dQw4w9WgXcQ",
+          "name": "Never Gonna Give You Up",
+          "externalUri": "https://music.youtube.com/watch?v=dQw4w9WgXcQ",
+          "durationMs": 213000,
+          "isrc": "dQw4w9WgXcQ",
+          "explicit": false,
+          "album": {
+            "id": "rick_astley_whenever_you_need",
+            "name": "Whenever You Need Somebody",
+            "externalUri": "https://music.youtube.com/browse/MPREb_rick_astley_whenever",
+            "albumType": "album",
+            "releaseDate": "1987-11-16",
+            "images": [
+              {
+                "url": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+                "width": 480,
+                "height": 360
+              }
+            ]
+          }
+        },
+        {
+          "id": "yPYZpwSpKmA",
+          "name": "Together Forever",
+          "externalUri": "https://music.youtube.com/watch?v=yPYZpwSpKmA",
+          "durationMs": 219000,
+          "isrc": "yPYZpwSpKmA",
+          "explicit": false,
+          "album": {
+            "id": "rick_astley_whenever_you_need",
+            "name": "Whenever You Need Somebody",
+            "externalUri": "https://music.youtube.com/browse/MPREb_rick_astley_whenever",
+            "albumType": "album",
+            "releaseDate": "1987-11-16",
+            "images": [
+              {
+                "url": "https://i.ytimg.com/vi/yPYZpwSpKmA/hqdefault.jpg",
+                "width": 480,
+                "height": 360
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "maroon5",
+      "name": "Maroon 5",
+      "externalUri": "https://music.youtube.com/channel/UCN1hnUccO4FD5WfM7ithXaw",
+      "images": [
+        {
+          "url": "https://i.ytimg.com/vi/aJOTlE1K90k/hqdefault.jpg",
+          "width": 480,
+          "height": 360
+        }
+      ],
+      "tracks": [
+        {
+          "id": "aJOTlE1K90k",
+          "name": "Girls Like You (feat. Cardi B)",
+          "externalUri": "https://music.youtube.com/watch?v=aJOTlE1K90k",
+          "durationMs": 236000,
+          "isrc": "aJOTlE1K90k",
+          "explicit": false,
+          "album": {
+            "id": "maroon5_red_pill_blues",
+            "name": "Red Pill Blues",
+            "externalUri": "https://music.youtube.com/browse/MPREb_red_pill_blues",
+            "albumType": "album",
+            "releaseDate": "2017-11-03",
+            "images": [
+              {
+                "url": "https://i.ytimg.com/vi/aJOTlE1K90k/hqdefault.jpg",
+                "width": 480,
+                "height": 360
+              }
+            ]
+          }
+        },
+        {
+          "id": "SlPhMPnQ58k",
+          "name": "Memories",
+          "externalUri": "https://music.youtube.com/watch?v=SlPhMPnQ58k",
+          "durationMs": 189000,
+          "isrc": "SlPhMPnQ58k",
+          "explicit": false,
+          "album": {
+            "id": "maroon5_memories",
+            "name": "Memories",
+            "externalUri": "https://music.youtube.com/browse/MPREb_maroon5_memories",
+            "albumType": "single",
+            "releaseDate": "2019-09-20",
+            "images": [
+              {
+                "url": "https://i.ytimg.com/vi/SlPhMPnQ58k/hqdefault.jpg",
+                "width": 480,
+                "height": 360
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,11 +1,14 @@
 library metadata_objects;
 
-import 'dart:io';
 import 'dart:typed_data';
+
+import 'dart:io'
+    if (dart.library.html) 'package:spotube/stubs/file_stub.dart' as io;
 
 import 'package:collection/collection.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:metadata_god/metadata_god.dart';
+import 'package:metadata_god/metadata_god.dart'
+    if (dart.library.html) 'package:spotube/stubs/metadata_god_stub.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart';
 import 'package:spotube/collections/assets.gen.dart';

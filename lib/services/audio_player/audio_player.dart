@@ -34,6 +34,7 @@ class SpotubeMedia extends mk.Media {
   final SpotubeTrackObject track;
   SpotubeMedia(
     this.track, {
+    String? uriOverride,
     Map<String, dynamic>? extras,
     super.httpHeaders,
   })  : assert(
@@ -44,7 +45,8 @@ class SpotubeMedia extends mk.Media {
         super(
           track is SpotubeLocalTrackObject
               ? track.path
-              : "http://$_host:$serverPort/stream/${track.id}?${_queries(track as SpotubeFullTrackObject)}",
+              : uriOverride ??
+                  "http://$_host:$serverPort/stream/${track.id}?${_queries(track as SpotubeFullTrackObject)}",
         );
 }
 

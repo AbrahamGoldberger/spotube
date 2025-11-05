@@ -10,6 +10,8 @@ import 'package:spotube/collections/spotube_icons.dart';
 import 'package:spotube/components/fallbacks/error_box.dart';
 import 'package:spotube/components/fallbacks/no_default_metadata_plugin.dart';
 import 'package:spotube/components/titlebar/titlebar.dart';
+import 'package:spotube/components/track_tile/track_tile.dart';
+import 'package:spotube/config/app_config.dart';
 import 'package:spotube/extensions/context.dart';
 import 'package:spotube/extensions/string.dart';
 import 'package:spotube/hooks/controllers/use_shadcn_text_editing_controller.dart';
@@ -18,6 +20,8 @@ import 'package:spotube/pages/search/tabs/all.dart';
 import 'package:spotube/pages/search/tabs/artists.dart';
 import 'package:spotube/pages/search/tabs/playlists.dart';
 import 'package:spotube/pages/search/tabs/tracks.dart';
+import 'package:spotube/provider/audio_player/audio_player.dart';
+import 'package:spotube/provider/curated_catalog_provider.dart';
 import 'package:spotube/provider/metadata_plugin/search/all.dart';
 import 'package:spotube/services/kv_store/kv_store.dart';
 import 'package:auto_route/auto_route.dart';
@@ -35,6 +39,9 @@ class SearchPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
+    if (!metadataPluginsEnabled) {
+      return const _CuratedSearchView();
+    }
     final controller = useShadcnTextEditingController();
     final focusNode = useFocusNode();
 
@@ -84,11 +91,11 @@ class SearchPage extends HookConsumerWidget {
           ],
           child: Builder(builder: (context) {
             if (searchChipSnapshot.error
-                case MetadataPluginException(
-                  errorCode: MetadataPluginErrorCode.noDefaultPlugin,
-                  message: _
-                )) {
-              return const NoDefaultMetadataPlugin();
+                case MetadataPluginException(:final errorCode)) {
+              if (errorCode == MetadataPluginErrorCode.noDefaultPlugin ||
+                  errorCode == MetadataPluginErrorCode.pluginsDisabled) {
+                return const NoDefaultMetadataPlugin();
+              }
             }
 
             if (searchChipSnapshot.hasError) {
@@ -241,6 +248,101 @@ class SearchPage extends HookConsumerWidget {
           }),
         ),
       ),
+    );
+  }
+}
+
+class _CuratedSearchView extends HookConsumerWidget {
+  const _CuratedSearchView();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final catalogAsync = ref.watch(curatedCatalogProvider);
+    final playlist = ref.watch(audioPlayerProvider);
+    final player = ref.read(audioPlayerProvider.notifier);
+    final controller = useShadcnTextEditingController();
+    final searchTerm = useState('');
+
+    useEffect(() {
+      controller.text = searchTerm.value;
+      return null;
+    }, [searchTerm.value]);
+
+    return catalogAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stackTrace) => Center(
+        child: ErrorBox(
+          error: error,
+          onRetry: () => ref.invalidate(curatedCatalogProvider),
+        ),
+      ),
+      data: (catalog) {
+        final query = searchTerm.value.trim().toLowerCase();
+        final tracks = catalog.tracks;
+        final filteredTracks = query.isEmpty
+            ? tracks
+            : tracks
+                .where(
+                  (track) => track.name.toLowerCase().contains(query) ||
+                      track.artists.any(
+                        (artist) => artist.name.toLowerCase().contains(query),
+                      ),
+                )
+                .toList();
+
+        return SafeArea(
+          bottom: false,
+          child: Scaffold(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                  child: TextField(
+                    controller: controller,
+                    placeholder: Text(context.l10n.search),
+                    onChanged: (value) => searchTerm.value = value,
+                    textInputAction: TextInputAction.search,
+                    features: const [
+                      InputFeature.leading(Icon(SpotubeIcons.search)),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                Expanded(
+                  child: filteredTracks.isEmpty
+                      ? Center(
+                          child: Text(context.l10n.nothing_found).muted(),
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          itemBuilder: (context, index) {
+                            final track = filteredTracks[index];
+                            return TrackTile(
+                              index: index,
+                              playlist: playlist,
+                              track: track,
+                              onTap: () => player.load(
+                                filteredTracks,
+                                initialIndex: index,
+                                autoPlay: true,
+                              ),
+                            );
+                          },
+                          separatorBuilder: (context, index) => const Gap(8),
+                          itemCount: filteredTracks.length,
+                        ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

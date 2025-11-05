@@ -4,10 +4,12 @@ import 'package:collection/collection.dart';
 import 'package:drift/drift.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:flutter/foundation.dart';
 import 'package:spotube/extensions/list.dart';
 import 'package:spotube/models/database/database.dart';
 import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/models/playback/track_sources.dart';
+import 'package:spotube/provider/allowlist_provider.dart';
 import 'package:spotube/provider/audio_player/state.dart';
 import 'package:spotube/provider/blacklist_provider.dart';
 import 'package:spotube/provider/database/database.dart';
@@ -18,6 +20,55 @@ import 'package:spotube/services/logger/logger.dart';
 
 class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   BlackListNotifier get _blacklist => ref.read(blacklistProvider.notifier);
+  AllowList get _allowList => ref.read(allowListProvider);
+
+  Future<SpotubeMedia> _mediaForTrack(SpotubeTrackObject track) async {
+    if (!kIsWeb || track is SpotubeLocalTrackObject) {
+      return SpotubeMedia(track);
+    }
+
+    final fullTrack = track as SpotubeFullTrackObject;
+    final query = TrackSourceQuery.fromTrack(fullTrack);
+
+    try {
+      final sourcedTrack =
+          await ref.read(trackSourcesProvider(query).future);
+      final url = sourcedTrack.url ??
+          (await ref
+                  .read(trackSourcesProvider(query).notifier)
+                  .refreshStreamingUrl())
+              .url;
+
+      if (url == null || url.isEmpty) {
+        throw Exception('No streaming URL resolved for track ${fullTrack.id}');
+      }
+
+      return SpotubeMedia(fullTrack, uriOverride: url);
+    } catch (error, stackTrace) {
+      AppLogger.reportError(error, stackTrace);
+      rethrow;
+    }
+  }
+
+  Future<List<SpotubeMedia>> _mediasForTracks(
+    Iterable<SpotubeTrackObject> tracks,
+  ) async {
+    if (!kIsWeb) {
+      return tracks.map((track) => SpotubeMedia(track)).toList();
+    }
+
+    final medias = <SpotubeMedia>[];
+    for (final track in tracks) {
+      try {
+        medias.add(await _mediaForTrack(track));
+      } catch (_) {
+        // Errors are reported inside _mediaForTrack; skip tracks that fail to
+        // resolve a streaming URL so the rest of the playlist can continue.
+      }
+    }
+
+    return medias;
+  }
 
   void _assertAllowedTracks(Iterable<SpotubeTrackObject> tracks) {
     assert(
@@ -73,15 +124,24 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         ),
       );
     } else if (tracks.isNotEmpty) {
-      state = state.copyWith(
-        tracks: tracks,
-        currentIndex: currentIndex,
-      );
-      await audioPlayer.openPlaylist(
-        tracks.asMediaList(),
-        initialIndex: currentIndex,
-        autoPlay: false,
-      );
+      final medias = await _mediasForTracks(tracks);
+      if (medias.isNotEmpty) {
+        final resolvedIndex = min(currentIndex, medias.length - 1);
+        state = state.copyWith(
+          tracks: medias.map((media) => media.track).toList(),
+          currentIndex: resolvedIndex,
+        );
+        await audioPlayer.openPlaylist(
+          medias,
+          initialIndex: resolvedIndex,
+          autoPlay: false,
+        );
+      } else {
+        state = state.copyWith(
+          tracks: const [],
+          currentIndex: 0,
+        );
+      }
     }
 
     if (playerState.collections.isNotEmpty) {
@@ -103,6 +163,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
   @override
   build() {
+    ref.watch(allowListProvider);
     final subscriptions = [
       audioPlayer.playingStream.listen((playing) async {
         try {
@@ -259,21 +320,29 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       return addTracks(tracks);
     }
 
-    final addableTracks = _blacklist.filter(tracks).where(
+    final addableTracks = _allowList
+        .filter(_blacklist.filter(tracks))
+        .where(
           (track) =>
               allowDuplicates ||
               !state.tracks.any((element) => _compareTracks(element, track)),
-        );
+        )
+        .toList();
+
+    final medias = await _mediasForTracks(addableTracks);
+    if (medias.isEmpty) {
+      return;
+    }
+
+    final insertTracks = medias.map((media) => media.track).toList();
 
     state = state.copyWith(
-      tracks: [...addableTracks, ...state.tracks],
+      tracks: [...insertTracks, ...state.tracks],
     );
 
-    for (int i = 0; i < addableTracks.length; i++) {
-      final track = addableTracks.elementAt(i);
-
+    for (int i = 0; i < medias.length; i++) {
       await audioPlayer.addTrackAt(
-        SpotubeMedia(track),
+        medias[i],
         max(state.currentIndex, 0) + i + 1,
       );
     }
@@ -289,14 +358,21 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   Future<void> addTrack(SpotubeTrackObject track) async {
     _assertAllowedTrack(track);
 
-    if (_blacklist.contains(track)) return;
+    if (_blacklist.contains(track) || !_allowList.allows(track)) return;
     if (state.tracks.any((element) => _compareTracks(element, track))) return;
 
+    SpotubeMedia media;
+    try {
+      media = await _mediaForTrack(track);
+    } catch (_) {
+      return;
+    }
+
     state = state.copyWith(
-      tracks: [...state.tracks, track],
+      tracks: [...state.tracks, media.track],
     );
 
-    await audioPlayer.addTrack(SpotubeMedia(track));
+    await audioPlayer.addTrack(media);
 
     await _updatePlayerState(
       AudioPlayerStateTableCompanion(
@@ -309,13 +385,21 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   Future<void> addTracks(Iterable<SpotubeTrackObject> tracks) async {
     _assertAllowedTracks(tracks);
 
-    tracks = _blacklist.filter(tracks).toList();
+    tracks = _allowList.filter(_blacklist.filter(tracks)).toList();
+    final medias = await _mediasForTracks(tracks);
+    if (medias.isEmpty) {
+      return;
+    }
+
     state = state.copyWith(
-      tracks: [...state.tracks, ...tracks],
+      tracks: [
+        ...state.tracks,
+        ...medias.map((media) => media.track),
+      ],
     );
 
-    for (final track in tracks) {
-      await audioPlayer.addTrack(SpotubeMedia(track));
+    for (final media in medias) {
+      await audioPlayer.addTrack(media);
     }
 
     await _updatePlayerState(
@@ -388,15 +472,19 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   }) async {
     _assertAllowedTracks(tracks);
 
-    final medias = _blacklist
-        .filter(tracks)
-        .toList()
-        .asMediaList()
+    final filteredTracks =
+        _allowList.filter(_blacklist.filter(tracks)).toList();
+
+    final medias = (await _mediasForTracks(filteredTracks))
         .unique((a, b) => a.uri == b.uri);
+
+    if (medias.isEmpty) return;
+
+    final resolvedIndex = min(initialIndex, medias.length - 1);
 
     // Giving the initial track a boost so MediaKit won't skip
     // because of timeout
-    final intendedActiveTrack = medias.elementAt(initialIndex);
+    final intendedActiveTrack = medias.elementAt(resolvedIndex);
     if (intendedActiveTrack.track is! SpotubeLocalTrackObject) {
       await ref.read(
         trackSourcesProvider(
@@ -406,18 +494,16 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       );
     }
 
-    if (medias.isEmpty) return;
-
     state = state.copyWith(
       // These are filtered tracks as well
       tracks: medias.map((media) => media.track).toList(),
-      currentIndex: initialIndex,
+      currentIndex: resolvedIndex,
       collections: [],
     );
 
     await audioPlayer.openPlaylist(
       medias,
-      initialIndex: initialIndex,
+      initialIndex: resolvedIndex,
       autoPlay: autoPlay,
     );
 

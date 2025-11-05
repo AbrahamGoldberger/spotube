@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:spotube/config/app_config.dart';
 import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/provider/metadata_plugin/core/auth.dart';
 import 'package:spotube/provider/metadata_plugin/metadata_plugin_provider.dart';
@@ -131,6 +132,9 @@ final metadataPluginIsSavedPlaylistProvider =
     final plugin = await ref.watch(metadataPluginProvider.future);
 
     if (plugin == null) {
+      if (!metadataPluginsEnabled) {
+        throw MetadataPluginException.pluginsDisabled();
+      }
       throw MetadataPluginException.noDefaultPlugin();
     }
 

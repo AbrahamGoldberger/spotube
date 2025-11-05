@@ -3,6 +3,7 @@ import 'package:riverpod/src/async_notifier.dart';
 import 'dart:async';
 
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:spotube/config/app_config.dart';
 import 'package:spotube/models/metadata/metadata.dart';
 
 import 'package:spotube/provider/metadata_plugin/metadata_plugin_provider.dart';
@@ -20,6 +21,9 @@ mixin MetadataPluginMixin<K>
     final plugin = await ref.read(metadataPluginProvider.future);
 
     if (plugin == null) {
+      if (!metadataPluginsEnabled) {
+        throw MetadataPluginException.pluginsDisabled();
+      }
       throw MetadataPluginException.noDefaultPlugin();
     }
 

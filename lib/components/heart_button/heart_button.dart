@@ -2,6 +2,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 import 'package:spotube/components/heart_button/use_track_toggle_like.dart';
+import 'package:spotube/config/app_config.dart';
 import 'package:spotube/extensions/context.dart';
 import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/provider/metadata_plugin/core/auth.dart';
@@ -29,6 +30,9 @@ class HeartButton extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
+    if (!metadataPluginsEnabled) {
+      return const SizedBox.shrink();
+    }
     final authenticated = ref.watch(metadataPluginAuthenticatedProvider);
 
     if (authenticated.asData?.value != true) return const SizedBox.shrink();
@@ -73,6 +77,9 @@ class TrackHeartButton extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
+    if (!metadataPluginsEnabled) {
+      return const SizedBox.shrink();
+    }
     final savedTracks = ref.watch(metadataPluginSavedTracksProvider);
     final me = ref.watch(metadataPluginUserProvider);
     final (:isLiked, :isLoading, :toggleTrackLike) =

@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:collection/collection.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/material.dart' as material show Theme;
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
@@ -9,6 +10,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:spotube/collections/spotube_icons.dart';
+import 'package:spotube/config/app_config.dart';
 import 'package:spotube/components/form/text_form_field.dart';
 import 'package:spotube/components/titlebar/titlebar.dart';
 import 'package:spotube/extensions/context.dart';
@@ -30,6 +32,9 @@ class SettingsMetadataProviderPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
+    if (!metadataPluginsEnabled) {
+      return const _MetadataPluginsDisabledView();
+    }
     final formKey = useMemoized(() => GlobalKey<FormBuilderState>(), []);
 
     final plugins = ref.watch(metadataPluginsProvider);
@@ -298,6 +303,53 @@ class SettingsMetadataProviderPage extends HookConsumerWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MetadataPluginsDisabledView extends StatelessWidget {
+  const _MetadataPluginsDisabledView();
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      bottom: false,
+      child: Scaffold(
+        headers: const [
+          TitleBar(
+            title: Text('Metadata plugins'),
+          )
+        ],
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(SpotubeIcons.info, size: 48),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Metadata plugins are disabled in this build.',
+                      style: material.Theme.of(context).textTheme.titleMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'This version of Spotube ships with a built-in metadata '
+                      'source and does not allow installing third-party plugins.',
+                      style: material.Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),

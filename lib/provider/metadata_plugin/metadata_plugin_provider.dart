@@ -7,6 +7,7 @@ import 'package:drift/drift.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:spotube/config/app_config.dart';
 import 'package:spotube/models/database/database.dart';
 import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/provider/database/database.dart';
@@ -70,6 +71,9 @@ class MetadataPluginNotifier extends AsyncNotifier<MetadataPluginState> {
 
   @override
   build() async {
+    if (!metadataPluginsEnabled) {
+      return const MetadataPluginState();
+    }
     final database = ref.watch(databaseProvider);
 
     final subscription = database.metadataPluginsTable.select().watch().listen(
@@ -270,6 +274,9 @@ class MetadataPluginNotifier extends AsyncNotifier<MetadataPluginState> {
   /// If only a text/html URL is provided, it will try to get the latest release from
   /// the URL for supported websites (github.com, codeberg.org).
   Future<PluginConfiguration> downloadAndCachePlugin(String url) async {
+    if (!metadataPluginsEnabled) {
+      throw MetadataPluginException.pluginsDisabled();
+    }
     final res = await globalDio.head(url);
     final isSupportedWebsite =
         (res.headers["Content-Type"]?.first)?.startsWith("text/html") == true &&
@@ -325,6 +332,9 @@ class MetadataPluginNotifier extends AsyncNotifier<MetadataPluginState> {
   }
 
   Future<void> addPlugin(PluginConfiguration plugin) async {
+    if (!metadataPluginsEnabled) {
+      throw MetadataPluginException.pluginsDisabled();
+    }
     _assertPluginApiCompatibility(plugin);
 
     final pluginRes = await (database.metadataPluginsTable.select()
@@ -355,6 +365,9 @@ class MetadataPluginNotifier extends AsyncNotifier<MetadataPluginState> {
   }
 
   Future<void> removePlugin(PluginConfiguration plugin) async {
+    if (!metadataPluginsEnabled) {
+      throw MetadataPluginException.pluginsDisabled();
+    }
     final pluginExtractionDir = await _getPluginExtractionDir(plugin);
 
     if (pluginExtractionDir.existsSync()) {
@@ -368,6 +381,9 @@ class MetadataPluginNotifier extends AsyncNotifier<MetadataPluginState> {
     PluginConfiguration plugin,
     PluginUpdateAvailable update,
   ) async {
+    if (!metadataPluginsEnabled) {
+      throw MetadataPluginException.pluginsDisabled();
+    }
     final isDefault = plugin == state.valueOrNull?.defaultPluginConfig;
     final pluginUpdatedConfig =
         await downloadAndCachePlugin(update.downloadUrl);
@@ -387,6 +403,9 @@ class MetadataPluginNotifier extends AsyncNotifier<MetadataPluginState> {
   }
 
   Future<void> setDefaultPlugin(PluginConfiguration plugin) async {
+    if (!metadataPluginsEnabled) {
+      throw MetadataPluginException.pluginsDisabled();
+    }
     await database.metadataPluginsTable
         .update()
         .write(const MetadataPluginsTableCompanion(selected: Value(false)));
@@ -431,6 +450,9 @@ final metadataPluginsProvider =
 
 final metadataPluginProvider = FutureProvider<MetadataPlugin?>(
   (ref) async {
+    if (!metadataPluginsEnabled) {
+      return null;
+    }
     final defaultPlugin = await ref.watch(
       metadataPluginsProvider.selectAsync((data) => data.defaultPluginConfig),
     );

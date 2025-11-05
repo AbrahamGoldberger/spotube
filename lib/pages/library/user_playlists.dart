@@ -11,6 +11,7 @@ import 'package:spotube/collections/spotube_icons.dart';
 import 'package:spotube/components/fallbacks/error_box.dart';
 import 'package:spotube/components/fallbacks/no_default_metadata_plugin.dart';
 import 'package:spotube/components/playbutton_view/playbutton_view.dart';
+import 'package:spotube/config/app_config.dart';
 import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/modules/playlist/playlist_create_dialog.dart';
 import 'package:spotube/components/inter_scrollbar/inter_scrollbar.dart';
@@ -30,6 +31,9 @@ class UserPlaylistsPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
+    if (!metadataPluginsEnabled) {
+      return const Center(child: NoDefaultMetadataPlugin());
+    }
     final searchText = useState('');
 
     final authenticated = ref.watch(metadataPluginAuthenticatedProvider);
@@ -81,12 +85,11 @@ class UserPlaylistsPage extends HookConsumerWidget {
 
     final controller = useScrollController();
 
-    if (playlistsQuery.error
-        case MetadataPluginException(
-          errorCode: MetadataPluginErrorCode.noDefaultPlugin,
-          message: _,
-        )) {
-      return const Center(child: NoDefaultMetadataPlugin());
+    if (playlistsQuery.error case MetadataPluginException(:final errorCode)) {
+      if (errorCode == MetadataPluginErrorCode.noDefaultPlugin ||
+          errorCode == MetadataPluginErrorCode.pluginsDisabled) {
+        return const Center(child: NoDefaultMetadataPlugin());
+      }
     }
 
     if (authenticated.asData?.value != true) {

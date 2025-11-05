@@ -10,6 +10,7 @@ enum MetadataPluginErrorCode {
   duplicatePlugin,
   pluginByteCodeFileNotFound,
   noDefaultPlugin,
+  pluginsDisabled,
 }
 
 class MetadataPluginException implements Exception {
@@ -72,6 +73,11 @@ class MetadataPluginException implements Exception {
       : this._(
           'No default metadata plugin is set. Please set a default plugin in the settings.',
           errorCode: MetadataPluginErrorCode.noDefaultPlugin,
+        );
+  MetadataPluginException.pluginsDisabled()
+      : this._(
+          'Metadata plugins are disabled for this build.',
+          errorCode: MetadataPluginErrorCode.pluginsDisabled,
         );
 
   @override

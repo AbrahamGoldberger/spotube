@@ -1,38 +1,63 @@
-import 'package:envied/envied.dart';
+import 'package:flutter/foundation.dart';
 import 'package:spotube/utils/platform.dart';
-
-part 'env.g.dart';
 
 enum ReleaseChannel {
   nightly,
   stable,
 }
 
-@Envied(obfuscate: true, requireEnvFile: true, path: ".env")
-abstract class Env {
-  @EnviedField(varName: 'LASTFM_API_KEY')
-  static final String lastFmApiKey = _Env.lastFmApiKey;
+class Env {
+  Env._();
 
-  @EnviedField(varName: 'LASTFM_API_SECRET')
-  static final String lastFmApiSecret = _Env.lastFmApiSecret;
+  static const _lastFmApiKey = String.fromEnvironment('LASTFM_API_KEY');
+  static const _lastFmApiSecret = String.fromEnvironment('LASTFM_API_SECRET');
+  static const _hideDonationsRaw = String.fromEnvironment('HIDE_DONATIONS');
+  static const _releaseChannelRaw = String.fromEnvironment('RELEASE_CHANNEL');
+  static const _enableUpdateCheckRaw =
+      String.fromEnvironment('ENABLE_UPDATE_CHECK');
 
-  @EnviedField(varName: 'HIDE_DONATIONS', defaultValue: "0")
-  static final int _hideDonations = _Env._hideDonations;
+  static String get lastFmApiKey => _stringWithFallback(_lastFmApiKey, '');
 
-  static bool get hideDonations => _hideDonations == 1;
+  static String get lastFmApiSecret =>
+      _stringWithFallback(_lastFmApiSecret, '');
 
-  @EnviedField(varName: 'ENABLE_UPDATE_CHECK', defaultValue: "1")
-  static final String _enableUpdateChecker = _Env._enableUpdateChecker;
+  static bool get hideDonations => _boolishFromEnvironment(
+        rawValue: _hideDonationsRaw,
+        defaultValue: false,
+      );
 
-  @EnviedField(varName: "RELEASE_CHANNEL", defaultValue: "nightly")
-  static final String _releaseChannel = _Env._releaseChannel;
+  static ReleaseChannel get releaseChannel => _releaseChannelFromString(
+        _stringWithFallback(_releaseChannelRaw, 'nightly'),
+      );
 
-  static ReleaseChannel get releaseChannel => _releaseChannel == "stable"
-      ? ReleaseChannel.stable
-      : ReleaseChannel.nightly;
+  static bool get enableUpdateChecker => kIsFlatpak ||
+      _boolishFromEnvironment(
+        rawValue: _enableUpdateCheckRaw,
+        defaultValue: true,
+      );
 
-  static bool get enableUpdateChecker =>
-      kIsFlatpak || _enableUpdateChecker == "1";
+  static const String discordAppId = '1176718791388975124';
 
-  static String discordAppId = "1176718791388975124";
+  static String _stringWithFallback(String raw, String fallback) {
+    return raw.isNotEmpty ? raw : fallback;
+  }
+
+  static bool _boolishFromEnvironment({
+    required String rawValue,
+    required bool defaultValue,
+  }) {
+    final normalized = rawValue.isEmpty
+        ? (defaultValue ? '1' : '0')
+        : rawValue.toLowerCase();
+    return normalized == '1' || normalized == 'true';
+  }
+
+  static ReleaseChannel _releaseChannelFromString(String raw) {
+    switch (raw.toLowerCase()) {
+      case 'stable':
+        return ReleaseChannel.stable;
+      default:
+        return ReleaseChannel.nightly;
+    }
+  }
 }

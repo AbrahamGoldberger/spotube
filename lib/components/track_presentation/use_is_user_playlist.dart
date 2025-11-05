@@ -1,9 +1,13 @@
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:spotube/config/app_config.dart';
 import 'package:spotube/provider/metadata_plugin/library/playlists.dart';
 import 'package:spotube/provider/metadata_plugin/core/user.dart';
 
 bool useIsUserPlaylist(WidgetRef ref, String playlistId) {
+  if (!metadataPluginsEnabled) {
+    return false;
+  }
   final userPlaylistsQuery = ref.watch(metadataPluginSavedPlaylistsProvider);
   final me = ref.watch(metadataPluginUserProvider);
 
